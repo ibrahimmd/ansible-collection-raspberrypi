@@ -1,0 +1,9 @@
+---
+- name: reboot raspberry pi to apply changes
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+    msg: "rebooting to apply changes"
+
+- name: debug reboot success
+  ansible.builtin.debug:
+    msg: "raspberry pi is back up and booting from storage disk"

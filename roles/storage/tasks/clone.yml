@@ -1,0 +1,123 @@
+---
+# clone sdcard to storage device
+- name: create storage mount points
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ storage_clone_mount}}"
+    - "{{ storage_clone_mount}}/boot/firmware"
+    - "{{ storage_clone_mount}}/home"
+
+- name: mount storage device root partition
+  ansible.posix.mount:
+    path: "{{ storage_clone_mount }}"
+    src: "{{ storage_disk.device }}{{ (storage_partitions | selectattr('role', 'defined') | selectattr('role', 'equalto', 'root') | first).number }}"
+    fstype: "{{ (storage_partitions | selectattr('role', 'defined') | selectattr('role', 'equalto', 'root') | first).fs }}"
+    state: ephemeral
+
+- name: mount storage device boot partition
+  ansible.posix.mount:
+    path: "{{ storage_clone_mount }}/boot/firmware"
+    src: "{{ storage_disk.device }}{{ (storage_partitions | selectattr('role', 'defined') | selectattr('role', 'equalto', 'boot') | first).number }}"
+    fstype: "{{ (storage_partitions | selectattr('role', 'defined') | selectattr('role', 'equalto', 'boot') | first).fs }}"
+    state: ephemeral
+
+- name: mount storage device home lvm partition
+  ansible.posix.mount:
+    path: "{{ storage_clone_mount }}/home"
+    src: /dev/{{ storage_lvm.vg.name }}/{{ (storage_lvm.lvs | selectattr('role', 'defined') | selectattr('role', 'equalto', 'home') | first).name }}
+    fstype: "{{ (storage_lvm.lvs | selectattr('role', 'defined') | selectattr('role', 'equalto', 'home') | first).fs }}"
+    state: ephemeral
+
+- name: clone / to {{ storage_clone_mount }}
+  ansible.posix.synchronize:
+    src: /
+    dest: "{{ storage_clone_mount }}/"
+    archive: true
+    delete: true
+    times: true
+    rsync_opts: "{{ storage_rsync_opts + [
+      '--exclude=.gvfs',
+      '--exclude=/dev/*',
+      '--exclude=/home/*'
+      '--exclude=/mnt/clone/*',
+      '--exclude=/proc/*',
+      '--exclude=/run/*',
+      '--exclude=/sys/*',
+      '--exclude=/tmp/*',
+      '--exclude=lost+found/*',
+      ] }}"
+  delegate_to: "{{ inventory_hostname }}"
+  changed_when: true
+
+- name: clone /boot/firmware to storage device
+  ansible.posix.synchronize:
+    src: /boot/firmware/
+    dest: "{{ storage_clone_mount }}/boot/firmware/"
+    archive: true
+    delete: true
+    times: true
+    rsync_opts: "{{ storage_rsync_opts + [
+      '--exclude=lost+found/*'
+      ] }}"
+  delegate_to: "{{ inventory_hostname }}"
+  changed_when: true
+
+- name: clone /home to storage device (lvm volume)
+  ansible.posix.synchronize:
+    src: /home/
+    dest: "{{ storage_clone_mount }}/home/"
+    delete: true
+    rsync_opts: "{{ storage_rsync_opts + [
+      '--exclude=lost+found/*'
+      ] }}"
+  delegate_to: "{{ inventory_hostname }}"
+  changed_when: true
+
+- name: create lvm mount point directories (except /home) in storage device
+  ansible.builtin.file:
+    path: "{{ storage_clone_mount }}{{ item.mount }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ storage_lvm.lvs }}"
+  when: item.role is not defined or item.role != 'home'
+
+- name: update root device in cmdline.txt
+  ansible.builtin.replace:
+    path: "{{ storage_clone_mount }}/boot/firmware/cmdline.txt"
+    regexp: 'root=\S+'
+    replace: 'root=PARTLABEL={{ (storage_partitions | selectattr("role", "defined") | selectattr("role", "equalto", "root") | first).name }}'
+
+- name: add cgroup settings to cmdline.txt
+  ansible.builtin.lineinfile:
+    path: "{{ storage_clone_mount }}/boot/firmware/cmdline.txt"
+    backrefs: true
+    regexp: '^((?!.*{{ item }}).*)$'
+    line: '\1 {{ item }}'
+  loop:
+    - cgroup_enable=cpuset
+    - cgroup_enable=memory
+    - cgroup_memory=1
+
+- name: write fstab to storage device
+  ansible.builtin.template:
+    src: fstab.j2
+    dest: "{{ storage_clone_mount }}/etc/fstab"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: write storage fact to storage device
+  community.general.ini_file:
+    path: "{{ storage_clone_mount }}{{ storage_facts_path }}/storage.fact"
+    section: disk
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+    mode: '0644'
+  loop:
+    - { key: device, value: "{{ storage_disk.device }}" }
+    - { key: type, value: "{{ storage_disk.type }}" }
+    - { key: formatted, value: "true" }
+    - { key: cloned, value: "true" }

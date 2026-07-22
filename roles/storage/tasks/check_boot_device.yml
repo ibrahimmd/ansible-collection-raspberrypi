@@ -1,0 +1,22 @@
+---
+# detects if root partition is booted from sdcard
+
+- name: check current boot device for root (/) partition
+  ansible.builtin.command: findmnt -o source -n /
+  register: storage_current_device_root
+  changed_when: false
+  tags: storage_check_boot_device
+
+- name: check current boot device for boot (/boot/firmware) partition
+  ansible.builtin.command: findmnt -o source -n /
+  register: storage_current_device_boot
+  changed_when: false
+  tags: storage_check_boot_device
+
+# NOTE: active boot partition could be sdcard,
+# but root partition could be on usb, so always check root mount
+- name: check if sdcard is used for root partition
+  ansible.builtin.set_fact:
+    storage_boot_device_is_sdcard: "{{ 'mmcblk' in storage_current_device_root.stdout }}"
+  changed_when: false
+  tags: storage_check_boot_device

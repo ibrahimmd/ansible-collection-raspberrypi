@@ -1,0 +1,41 @@
+---
+# tasks file for storage
+- name: gather local facts
+  ansible.builtin.setup:
+    filter: ansible_local
+
+# do a runtime check if local facts is not defined
+- name: check current boot device
+  ansible.builtin.import_tasks: check_boot_device.yml
+  when: ansible_local.storage.disk.device is not defined
+
+- name: storage setup
+  when: storage_boot_device_is_sdcard | default(false)
+  block:
+  - name: preinstall tasks
+    ansible.builtin.import_tasks: preinstall.yml
+    tags: storage_install_package
+
+  - name: partition storage device
+    ansible.builtin.import_tasks: partition.yml
+    tags: storage_partition
+
+  - name: format partitions in storage device
+    ansible.builtin.import_tasks: mkfs.yml
+    tags: storage_mkfs
+
+  - name: setup lvm in storage device
+    ansible.builtin.import_tasks: lvm.yml
+    tags: storage_lvm
+
+  - name: clone sdcard to storage device
+    ansible.builtin.import_tasks: clone.yml
+    tags: storage_clone
+
+  - name: update eeprom
+    ansible.builtin.import_tasks: eeprom.yml
+    tags: storage_eeprom
+
+  - name: reboot to apply changes
+    ansible.builtin.import_tasks: reboot.yml
+    tags: storage_reboot
