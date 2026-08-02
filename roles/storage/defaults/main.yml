@@ -1,0 +1,11 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for storage
+storage_clone_mount: /mnt/clone
+
+storage_rsync_opts:
+- "--force"
+- "--quiet"
+- "-AWHXx"
+
+storage_facts_path: "/etc/ansible/facts.d"

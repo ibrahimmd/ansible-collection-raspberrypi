@@ -1,0 +1,10 @@
+# this file is managed by ansible
+proc            /proc           proc    defaults          0       0
+PARTLABEL={{ (storage_partitions | selectattr('role', 'defined') | selectattr('role', 'equalto', 'boot') | first).name }}  /boot/firmware  vfat    defaults          0       2
+PARTLABEL={{ (storage_partitions | selectattr('role', 'defined') | selectattr('role', 'equalto', 'root') | first).name }}  /               ext4    defaults,noatime  0       1
+{% for partition in storage_partitions | selectattr('role', 'defined') | selectattr('role', 'equalto', 'swap') | list %}
+PARTLABEL={{ partition.name }}  none  swap  sw  0       0
+{% endfor %}
+{% for lv in storage_lvm.lvs %}
+/dev/{{ storage_lvm.vg.name }}/{{ lv.name }}  {{ lv.mount }}  {{ lv.fs }}  defaults,noatime  0       2
+{% endfor %}

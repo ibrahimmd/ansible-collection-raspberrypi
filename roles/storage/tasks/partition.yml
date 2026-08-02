@@ -1,0 +1,41 @@
+---
+# partition storage device
+
+- name: read storage device partition information directly
+  community.general.parted:
+    device: "{{ storage_disk.device }}"
+    unit: MiB
+    state: info
+  register: storage_device_info
+
+- name: display partition details on error condition
+  ansible.builtin.debug:
+    var: storage_device_info.partitions
+  when: storage_device_info.partitions | length > 0
+
+- name: fail if storage device already contains partitions
+  ansible.builtin.fail:
+    msg: "error: safety check: {{ storage_disk.device }} already has existing partitions."
+  when: storage_device_info.partitions | length > 0
+
+# - name: wipe partition table on {{ storage_disk.device }}
+#   ansible.builtin.command:
+#     cmd: wipefs -a {{ storage_disk.device }}
+#   changed_when: true
+#   tags: storage_partition
+
+# TODO: add feature to force wipe storage disk
+
+- name: create partitions in {{ storage_disk.device }}
+  community.general.parted:
+    device: "{{ storage_disk.device }}"
+    number: "{{ item.number }}"
+    name: "{{ item.name }}"
+    unit: "{{ storage_disk.partition_unit }}"
+    label: "{{ storage_disk.label }}"
+    part_start: "{{ item.start }}"
+    part_end: "{{ item.end }}"
+    fs_type: "{{ 'linux-swap' if item.fs | default('') == 'swap' else omit }}"
+    flags: "{{ item.flags | default(omit) }}"
+    state: present
+  loop: "{{ storage_partitions }}"

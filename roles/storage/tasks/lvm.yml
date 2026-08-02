@@ -1,0 +1,23 @@
+---
+# create lvm and format filesystems
+- name: create lvm physical volume
+  community.general.lvg:
+    vg: "{{ storage_lvm.vg.name }}"
+    pvs: "{{ storage_lvm.vg.pvs | join(',') }}"
+    state: present
+
+- name: create lvm logical volumes
+  community.general.lvol:
+    vg: "{{ storage_lvm.vg.name }}"
+    lv: "{{ item.name }}"
+    size: "{{ item.size }}"
+    state: present
+  loop: "{{ storage_lvm.lvs }}"
+
+- name: format lvm logical volumes
+  community.general.filesystem:
+    fstype: "{{ item.fs }}"
+    dev: "/dev/{{ storage_lvm.vg.name }}/{{ item.name }}"
+    opts: "-L {{ item.name }}"
+    force: true
+  loop: "{{ storage_lvm.lvs }}"

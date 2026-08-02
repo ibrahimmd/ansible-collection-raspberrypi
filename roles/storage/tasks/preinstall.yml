@@ -1,0 +1,8 @@
+---
+# install required packages
+- name: install required packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - lvm2
