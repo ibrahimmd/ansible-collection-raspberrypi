@@ -164,8 +164,16 @@ storage_lvm:
     pvs:
       - /dev/sda4
   lvs:
-    - name:
-
+  - name: home
+    size: 20G
+    fs: ext4
+    role: home      # home is only supported within lvm
+    mount: /home
+  - name: rancher
+    size: 10G
+    fs: ext4
+    mount: /var/lib/rancher
+ ``
 
 ## License
 
