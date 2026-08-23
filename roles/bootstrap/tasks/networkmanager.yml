@@ -1,0 +1,24 @@
+# networkmanager tasks
+- name: create networkmanager drop-in directory
+  ansible.builtin.file:
+    path: /etc/NetworkManager/conf.d/
+    state: directory
+    mode: '0755'
+
+- name: configure networkmanager unmanaged interfaces files
+  ansible.builtin.copy:
+    src: "networkmanager/{{ item }}"
+    dest: /etc/NetworkManager/conf.d/90-{{ item }}
+    mode: '0644'
+  loop:
+    - cilium.conf
+    - calico.conf
+    - docker.conf
+    - flannel.conf
+    - podman.conf
+    - vpn.conf
+  notify: restart networkmanager
+
+# required if include_role is used instead of import_role
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers

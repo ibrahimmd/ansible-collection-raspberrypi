@@ -1,0 +1,5 @@
+[Match]
+Name=flannel* cni0 veth*
+
+[Link]
+Unmanaged=yes

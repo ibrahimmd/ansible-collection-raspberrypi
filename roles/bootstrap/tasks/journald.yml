@@ -1,0 +1,35 @@
+---
+# journald tasks
+- name: create journal log directory
+  ansible.builtin.file:
+    path: /var/log/journal
+    state: directory
+    owner: root
+    group: systemd-journal
+    mode: '2755'
+
+- name: create /etc/systemd/journald.conf.d journal config directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '755'
+
+#NOTE: debian 13 sets Storage=volatile in
+#      /usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf
+#      refer to man journald.conf.d
+
+# this will overwrite the storage setting in /usr/lib/systemd/journald.conf.d
+- name: configure persistent journal storage
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/99-persistent-storage.conf
+    content: |
+      [Journal]
+      Storage=persistent
+    mode: '0644'
+  notify: restart systemd-journald
+
+# required if include_role is used instead of import_role
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers

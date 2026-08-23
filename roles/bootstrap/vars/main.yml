@@ -1,0 +1,4 @@
+---
+# default vars file
+bootstrap_networkd_conf_dir: "/etc/systemd/networkd.conf.d"
+bootstrap_networkmanager_conf_dir: "/etc/NetworkManager/conf.d"
