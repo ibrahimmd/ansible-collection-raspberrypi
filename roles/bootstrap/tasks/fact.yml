@@ -2,7 +2,7 @@
 # ansible local facts file
 - name: write bootstrap installed fact
   community.general.ini_file:
-    path: "{{ tailscale_file_path.ansible_fact }}"
+    path: "{{ bootstrap_file_path.ansible_fact }}"
     section: bootstrap
     option: installed
     value: "true"

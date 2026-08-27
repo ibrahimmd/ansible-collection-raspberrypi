@@ -10,3 +10,7 @@
 - name: configure networkmanager
   ansible.builtin.import_tasks: networkmanager.yml
   tags: bootstrap_networkmanager
+
+- name: update ansible local facts
+  ansible.builtin.import_tasks: fact.yml
+  tags: bootstrap_fact
