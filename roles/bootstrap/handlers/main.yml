@@ -1,0 +1,23 @@
+---
+# handlers file for bootstrap
+- name: restart systemd-journald
+  ansible.builtin.systemd:
+    name: systemd-journald
+    daemon_reload: true
+    state: restarted
+  no_log: true
+  failed_when: false
+
+- name: restart systemd-networkd
+  ansible.builtin.systemd:
+    name: systemd-networkd
+    state: restarted
+  no_log: true
+  failed_when: false
+
+- name: restart networkmanager
+  ansible.builtin.systemd:
+    name: NetworkManager
+    state: restarted
+  no_log: true
+  failed_when: false

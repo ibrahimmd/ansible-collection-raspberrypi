@@ -1,0 +1,5 @@
+[Match]
+Name=podman* netavark* veth*
+
+[Network]
+Unmanaged=yes

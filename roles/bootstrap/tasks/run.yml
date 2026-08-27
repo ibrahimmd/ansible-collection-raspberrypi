@@ -1,0 +1,16 @@
+# run bootstrap
+- name: configure systemd-journald
+  ansible.builtin.import_tasks: journald.yml
+  tags: bootstrap_journald
+
+- name: configure systemd-networkd
+  ansible.builtin.import_tasks: networkd.yml
+  tags: bootstrap_networkd
+
+- name: configure networkmanager
+  ansible.builtin.import_tasks: networkmanager.yml
+  tags: bootstrap_networkmanager
+
+- name: update ansible local facts
+  ansible.builtin.import_tasks: fact.yml
+  tags: bootstrap_fact

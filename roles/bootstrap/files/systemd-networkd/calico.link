@@ -1,0 +1,5 @@
+[Match]
+Name=cali* tunl* vxlan.calico vxlan-v6.calico wireguard.cali wg-v6.cali
+
+[Link]
+Unmanaged=yes

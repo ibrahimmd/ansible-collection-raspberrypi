@@ -1,0 +1,34 @@
+---
+# networkd tasks
+- name: create systemd-networkd drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/networkd.conf.d
+    state: directory
+    mode: '0755'
+
+- name: configure systemd-networkd foreign routes
+  ansible.builtin.copy:
+    src: "systemd-networkd/foreignroutes.conf"
+    dest: /etc/systemd/networkd.conf.d/foreignroutes.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart systemd-networkd
+
+- name: configure systemd-networkd network link files
+  ansible.builtin.copy:
+    src: "systemd-networkd/{{ item }}"
+    dest: /etc/systemd/network/90-{{ item }}
+    mode: '0644'
+  loop:
+    - cilium.link
+    - calico.link
+    - docker.link
+    - flannel.link
+    - podman.link
+    - vpn.link
+  notify: restart systemd-networkd
+
+# required if include_role is used instead of import_role
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers

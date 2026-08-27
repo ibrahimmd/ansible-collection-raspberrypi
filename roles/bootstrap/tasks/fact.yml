@@ -1,0 +1,13 @@
+---
+# ansible local facts file
+- name: write bootstrap installed fact
+  community.general.ini_file:
+    path: "{{ bootstrap_file_path.ansible_fact }}"
+    section: bootstrap
+    option: installed
+    value: "true"
+    mode: '0644'
+
+- name: refresh local facts
+  ansible.builtin.setup:
+    filter: ansible_local

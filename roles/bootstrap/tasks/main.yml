@@ -1,0 +1,25 @@
+---
+# tasks file for bootstrap
+- name: skip host if bootstrap is already completed
+  ansible.builtin.meta: end_role
+  when:
+    - (ansible_local.raspberrypi.bootstrap.installed | default('false') | bool) == true
+    - (bootstrap_force_install | default(false) | bool) == false
+
+- name: import bootstrap variables specific to os distribution,family or version
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_facts['os_family'] | lower }}-{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_version'] }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}-{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_major_version'] }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}-{{ ansible_facts['distribution'] | lower }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}.yml"
+        - "default.yml"
+      paths:
+        - "{{ role_path }}/vars"
+
+- name: run bootstrap
+  ansible.builtin.include_tasks: run.yml
+  when:
+    - (bootstrap_supported | default(false) | bool) == true
+
