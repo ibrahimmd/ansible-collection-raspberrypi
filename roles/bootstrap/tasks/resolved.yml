@@ -1,0 +1,17 @@
+---
+# resolved tasks
+
+# use systemd-resolved to manage dns
+# more info: https://tailscale.com/s/dns-fight
+- name: install systemd-resolved
+  ansible.builtin.package:
+    name: systemd-resolved
+    state: present
+  no_log: true
+
+- name: enable and start systemd-resolved
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: started
+    enabled: true
+  no_log: true

@@ -7,6 +7,10 @@
   ansible.builtin.import_tasks: networkd.yml
   tags: bootstrap_networkd
 
+- name: configure systemd-resolved
+  ansible.builtin.import_tasks: resolved.yml
+  tags: bootstrap_resolved
+
 - name: configure networkmanager
   ansible.builtin.import_tasks: networkmanager.yml
   tags: bootstrap_networkmanager
@@ -14,3 +18,4 @@
 - name: update ansible local facts
   ansible.builtin.import_tasks: fact.yml
   tags: bootstrap_fact
+
