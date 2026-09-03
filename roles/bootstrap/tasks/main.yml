@@ -19,7 +19,7 @@
         - "{{ role_path }}/vars"
 
 - name: run bootstrap
-  ansible.builtin.include_tasks: run.yml
+  ansible.builtin.include_tasks: setup.yml
   when:
     - (bootstrap_supported | default(false) | bool) == true
 
